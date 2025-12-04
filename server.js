@@ -9,6 +9,21 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Validate environment variables
+if (!process.env.MONGODB_URI) {
+  console.error('❌ FATAL: MONGODB_URI is not set in environment variables');
+  process.exit(1);
+}
+
+if (!process.env.N8N_WEBHOOK_URL) {
+  console.error('⚠️ WARNING: N8N_WEBHOOK_URL is not set in environment variables');
+}
+
+console.log('🔧 Environment Check:');
+console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? '✅ Set' : '❌ Missing');
+console.log('  - N8N_WEBHOOK_URL:', process.env.N8N_WEBHOOK_URL ? '✅ Set' : '❌ Missing');
+console.log('  - PORT:', PORT);
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -27,6 +42,16 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('Error Message:', err.message);
   console.error('Error Stack:', err.stack);
   console.error('Full Error:', err);
+  console.error('\n⚠️ Make sure MongoDB URI is correct in environment variables');
+});
+
+// MongoDB connection events
+mongoose.connection.on('disconnected', () => {
+  console.log('❌ MongoDB disconnected');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB error:', err);
 });
 
 // Chat Message Schema
@@ -59,7 +84,16 @@ app.post('/api/chat', async (req, res) => {
     const { message, sessionId } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+      return res.status(400).json({ error: 'Message is required', success: false });
+    }
+
+    if (!process.env.N8N_WEBHOOK_URL) {
+      console.error('❌ N8N_WEBHOOK_URL not configured');
+      return res.status(500).json({ 
+        error: 'Chatbot configuration error. Please contact administrator.',
+        success: false,
+        details: 'Webhook URL not configured'
+      });
     }
 
     // Send to n8n webhook
@@ -120,10 +154,23 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    res.status(500).json({ 
-      error: 'Failed to process message. Please check your n8n webhook configuration.',
+    let errorMessage = 'Failed to process message.';
+    let statusCode = 500;
+    
+    if (error.response) {
+      statusCode = error.response.status;
+      errorMessage = `Webhook error: ${error.response.statusText || 'Unknown error'}`;
+    } else if (error.request) {
+      errorMessage = 'Unable to reach webhook. Please check your network connection.';
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = 'Webhook URL not found. Please check configuration.';
+    }
+    
+    res.status(statusCode).json({ 
+      error: errorMessage,
       success: false,
-      details: error.message
+      details: error.message,
+      webhook: process.env.N8N_WEBHOOK_URL ? 'configured' : 'missing'
     });
   }
 });
@@ -158,10 +205,33 @@ app.get('/api/history', async (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  const webhookConfigured = !!process.env.N8N_WEBHOOK_URL;
+  
   res.json({ 
     status: 'ok', 
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    mongodb: mongoStatus,
+    webhook: webhookConfigured ? 'configured' : 'not configured',
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      port: PORT
+    },
     timestamp: new Date().toISOString()
+  });
+});
+
+// Catch-all error handler
+app.use((err, req, res, next) => {
+  console.error('❌ Unhandled error:');
+  console.error('Error Name:', err.name);
+  console.error('Error Message:', err.message);
+  console.error('Error Stack:', err.stack);
+  
+  res.status(500).json({
+    error: 'Internal server error',
+    success: false,
+    details: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
   });
 });
 

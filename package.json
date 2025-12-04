@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Personal AI Chatbot with n8n Integration",
   "main": "server.js",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "check": "node check-config.js"
   },
   "keywords": ["chatbot", "n8n", "mongodb", "express"],
   "author": "Vipul",

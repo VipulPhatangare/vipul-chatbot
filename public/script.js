@@ -11,10 +11,23 @@ class ChatBot {
         this.clearChatBtn = document.getElementById('clearChat');
         this.statusElement = document.getElementById('status');
         
-        this.sessionId = this.generateSessionId();
+        this.sessionId = this.getOrCreateSessionId();
         this.isTyping = false;
         
         this.init();
+    }
+
+    getOrCreateSessionId() {
+        // Check if session ID exists in localStorage
+        let sessionId = localStorage.getItem('chatSessionId');
+        
+        if (!sessionId) {
+            // Create new session ID if doesn't exist
+            sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('chatSessionId', sessionId);
+        }
+        
+        return sessionId;
     }
 
     init() {
@@ -239,7 +252,7 @@ class ChatBot {
 
         // Typing animation
         let index = 0;
-        const typingSpeed = 30; // milliseconds per character
+        const typingSpeed = 10; // milliseconds per character
 
         return new Promise((resolve) => {
             const typeNextChar = () => {
@@ -340,6 +353,10 @@ class ChatBot {
         const messages = this.chatContainer.querySelectorAll('.message, .error-message');
         messages.forEach(msg => msg.remove());
 
+        // Clear session and create new one
+        localStorage.removeItem('chatSessionId');
+        this.sessionId = this.getOrCreateSessionId();
+
         // Show welcome message
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'welcome-message';
@@ -352,12 +369,12 @@ class ChatBot {
 
         this.dropdownMenu.classList.remove('active');
         
-        console.log('Chat cleared');
+        console.log('Chat cleared and new session started');
     }
 
     async loadChatHistory() {
         try {
-            const response = await fetch(`/api/history?sessionId=${this.sessionId}&limit=10`);
+            const response = await fetch(`/api/history?sessionId=${this.sessionId}&limit=50`);
             const data = await response.json();
 
             if (data.success && data.messages && data.messages.length > 0) {
@@ -367,15 +384,48 @@ class ChatBot {
                     welcomeMsg.remove();
                 }
 
-                // Add previous messages
+                // Add previous messages without typing animation
                 data.messages.forEach(msg => {
-                    this.addMessage(msg.userMessage, 'user');
-                    this.addMessage(msg.botResponse, 'bot');
+                    this.addMessageInstant(msg.userMessage, 'user', new Date(msg.timestamp));
+                    this.addMessageInstant(msg.botResponse, 'bot', new Date(msg.timestamp));
                 });
+                
+                // Scroll to bottom after loading history
+                this.scrollToBottom();
             }
         } catch (error) {
             console.error('Error loading chat history:', error);
         }
+    }
+
+    addMessageInstant(text, sender, timestamp) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = sender === 'user' ? '👤' : '🤖';
+
+        const content = document.createElement('div');
+        content.className = 'message-content';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = text;
+
+        const time = document.createElement('div');
+        time.className = 'message-time';
+        time.textContent = this.formatTime(timestamp || new Date());
+
+        content.appendChild(bubble);
+        content.appendChild(time);
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(content);
+
+        this.chatContainer.appendChild(messageDiv);
+
+        return bubble;
     }
 
     async checkServerHealth() {
