@@ -59,8 +59,10 @@ body {
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(10px);
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 100;
+    flex-shrink: 0;
 }
 
 .header-content {
@@ -190,8 +192,10 @@ body {
 .chat-container {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 2rem 1.5rem;
     scroll-behavior: smooth;
+    min-height: 0;
 }
 
 .chat-container::-webkit-scrollbar {
@@ -469,35 +473,40 @@ body {
     }
 
     .chat-header {
-        padding: 0.875rem 1rem;
+        padding: 0.75rem 0.875rem;
         flex-shrink: 0;
+        position: sticky;
+        top: 0;
     }
 
     .header-info h1 {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .status {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .bot-avatar {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
     }
 
     .bot-avatar svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
     }
 
     .chat-container {
-        padding: 1rem 0.75rem;
-        flex: 1;
+        padding: 0.875rem 0.75rem;
+        flex: 1 1 auto;
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        min-height: 0;
+        max-height: calc(100vh - 140px);
+        max-height: calc(100dvh - 140px);
     }
 
     .message {
@@ -604,16 +613,21 @@ body {
 
 @media (max-width: 480px) {
     .chat-header {
-        padding: 0.75rem 0.875rem;
+        padding: 0.625rem 0.75rem;
     }
 
     .header-info h1 {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .bot-avatar {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .bot-avatar svg {
+        width: 16px;
+        height: 16px;
     }
 
     .message-content {
@@ -626,7 +640,9 @@ body {
     }
 
     .chat-container {
-        padding: 0.875rem 0.625rem;
+        padding: 0.75rem 0.625rem;
+        max-height: calc(100vh - 130px);
+        max-height: calc(100dvh - 130px);
     }
 
     .welcome-message {
