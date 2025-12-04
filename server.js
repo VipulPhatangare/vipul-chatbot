@@ -21,7 +21,13 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true
 })
 .then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+.catch(err => {
+  console.error('❌ MongoDB connection error:');
+  console.error('Error Name:', err.name);
+  console.error('Error Message:', err.message);
+  console.error('Error Stack:', err.stack);
+  console.error('Full Error:', err);
+});
 
 // Chat Message Schema
 const messageSchema = new mongoose.Schema({
@@ -79,7 +85,6 @@ app.post('/api/chat', async (req, res) => {
     });
 
     await newMessage.save();
-    console.log('✅ Message saved to database');
 
     // Send response back to client
     res.json({
@@ -89,7 +94,23 @@ app.post('/api/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error processing chat:', error.message);
+    console.error('❌ Error processing chat:');
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Error Code:', error.code);
+    console.error('Error Stack:', error.stack);
+    
+    if (error.response) {
+      console.error('Response Status:', error.response.status);
+      console.error('Response Data:', error.response.data);
+      console.error('Response Headers:', error.response.headers);
+    }
+    
+    if (error.request) {
+      console.error('Request Details:', error.request);
+    }
+    
+    console.error('Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     
     // Handle different error types
     if (error.code === 'ECONNABORTED') {
@@ -122,7 +143,12 @@ app.get('/api/history', async (req, res) => {
       messages: messages.reverse()
     });
   } catch (error) {
-    console.error('❌ Error fetching history:', error);
+    console.error('❌ Error fetching history:');
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    console.error('Full Error:', error);
+    
     res.status(500).json({ 
       error: 'Failed to fetch chat history',
       success: false 
