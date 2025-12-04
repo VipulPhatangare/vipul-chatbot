@@ -28,12 +28,24 @@ class ChatBot {
         // Auto-resize textarea
         this.messageInput.addEventListener('input', () => this.autoResize());
         
+        // Handle mobile keyboard
+        this.messageInput.addEventListener('focus', () => this.handleInputFocus());
+        this.messageInput.addEventListener('blur', () => this.handleInputBlur());
+        
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!this.menuBtn.contains(e.target) && !this.dropdownMenu.contains(e.target)) {
                 this.dropdownMenu.classList.remove('active');
             }
         });
+        
+        // Prevent body scroll on mobile when chat is scrolling
+        this.chatContainer.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Handle window resize for mobile keyboards
+        this.handleViewportResize();
         
         // Load chat history
         this.loadChatHistory();
@@ -65,7 +77,47 @@ class ChatBot {
 
     autoResize() {
         this.messageInput.style.height = 'auto';
-        this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
+        const maxHeight = window.innerWidth <= 768 ? 100 : 120;
+        this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, maxHeight) + 'px';
+    }
+
+    handleInputFocus() {
+        // Scroll to bottom when input is focused on mobile
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                this.scrollToBottom();
+                // Ensure input is visible
+                this.messageInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 300);
+        }
+    }
+
+    handleInputBlur() {
+        // Reset scroll position if needed
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                this.scrollToBottom();
+            }, 100);
+        }
+    }
+
+    handleViewportResize() {
+        let lastHeight = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            const currentHeight = window.innerHeight;
+            
+            // Keyboard appeared (viewport got smaller)
+            if (currentHeight < lastHeight) {
+                document.body.style.height = currentHeight + 'px';
+            } 
+            // Keyboard disappeared (viewport got bigger)
+            else if (currentHeight > lastHeight) {
+                document.body.style.height = '100vh';
+            }
+            
+            lastHeight = currentHeight;
+        });
     }
 
     async handleSubmit(e) {
@@ -262,6 +314,14 @@ class ChatBot {
     scrollToBottom() {
         setTimeout(() => {
             this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            
+            // For mobile devices, ensure smooth scrolling
+            if (window.innerWidth <= 768) {
+                this.chatContainer.scrollTo({
+                    top: this.chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
         }, 100);
     }
 
