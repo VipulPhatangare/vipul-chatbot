@@ -95,19 +95,19 @@ class ChatBot {
     }
 
     handleInputFocus() {
-        // Adjust chat container height when keyboard opens on mobile
+        // Scroll to bottom when input is focused on mobile
         if (window.innerWidth <= 768) {
-            this.chatContainer.style.maxHeight = '55vh';
             setTimeout(() => {
                 this.scrollToBottom();
+                // Ensure input is visible
+                this.messageInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 300);
         }
     }
 
     handleInputBlur() {
-        // Reset chat container height when keyboard closes on mobile
+        // Reset scroll position if needed
         if (window.innerWidth <= 768) {
-            this.chatContainer.style.maxHeight = '';
             setTimeout(() => {
                 this.scrollToBottom();
             }, 100);
@@ -115,15 +115,21 @@ class ChatBot {
     }
 
     handleViewportResize() {
-        // No need to manually adjust height - CSS handles it with dvh
-        // Just ensure scrolling works properly
+        let lastHeight = window.innerHeight;
+        
         window.addEventListener('resize', () => {
-            // Scroll to bottom when keyboard opens/closes on mobile
-            if (window.innerWidth <= 768) {
-                setTimeout(() => {
-                    this.scrollToBottom();
-                }, 300);
+            const currentHeight = window.innerHeight;
+            
+            // Keyboard appeared (viewport got smaller)
+            if (currentHeight < lastHeight) {
+                document.body.style.height = currentHeight + 'px';
+            } 
+            // Keyboard disappeared (viewport got bigger)
+            else if (currentHeight > lastHeight) {
+                document.body.style.height = '100vh';
             }
+            
+            lastHeight = currentHeight;
         });
     }
 
