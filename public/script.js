@@ -115,21 +115,15 @@ class ChatBot {
     }
 
     handleViewportResize() {
-        let lastHeight = window.innerHeight;
-        
+        // No need to manually adjust height - CSS handles it with dvh
+        // Just ensure scrolling works properly
         window.addEventListener('resize', () => {
-            const currentHeight = window.innerHeight;
-            
-            // Keyboard appeared (viewport got smaller)
-            if (currentHeight < lastHeight) {
-                document.body.style.height = currentHeight + 'px';
-            } 
-            // Keyboard disappeared (viewport got bigger)
-            else if (currentHeight > lastHeight) {
-                document.body.style.height = '100vh';
+            // Scroll to bottom when keyboard opens/closes on mobile
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 300);
             }
-            
-            lastHeight = currentHeight;
         });
     }
 
