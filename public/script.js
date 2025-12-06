@@ -95,19 +95,19 @@ class ChatBot {
     }
 
     handleInputFocus() {
-        // Scroll to bottom when input is focused on mobile
+        // Adjust chat container height when keyboard opens on mobile
         if (window.innerWidth <= 768) {
+            this.chatContainer.style.maxHeight = '55vh';
             setTimeout(() => {
                 this.scrollToBottom();
-                // Ensure input is visible
-                this.messageInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 300);
         }
     }
 
     handleInputBlur() {
-        // Reset scroll position if needed
+        // Reset chat container height when keyboard closes on mobile
         if (window.innerWidth <= 768) {
+            this.chatContainer.style.maxHeight = '';
             setTimeout(() => {
                 this.scrollToBottom();
             }, 100);
