@@ -361,9 +361,7 @@ class ChatBot {
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'welcome-message';
         welcomeDiv.innerHTML = `
-            <div class="welcome-icon">👋</div>
-            <h2>Welcome to My Personal Assistant!</h2>
-            <p>Ask me anything about my work, projects, or expertise. I'm here to help!</p>
+            <h2>What can I help with?</h2>
         `;
         this.chatContainer.appendChild(welcomeDiv);
 
