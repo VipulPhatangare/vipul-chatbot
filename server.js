@@ -235,6 +235,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+
+app.get('/api/activate', (req, res) => {
+  res.json({ message: 'Hello from the server!' });
+});
+
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
